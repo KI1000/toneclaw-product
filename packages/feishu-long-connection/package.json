@@ -10,7 +10,7 @@
     ".": "./dist/index.mjs"
   },
   "files": [
-    "dist/index.mjs"
+    "dist/"
   ],
   "scripts": {
     "build": "tsdown",

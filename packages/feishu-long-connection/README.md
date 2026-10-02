@@ -29,5 +29,6 @@ pnpm install
 pnpm check
 ```
 
-The build emits a self-contained ESM plugin at `dist/index.mjs`, suitable for a
-desktop profile to load without a source-tree path or separate `node_modules`.
+The build emits an ESM plugin under `dist/`. Deploy it together with its
+production `node_modules` (or as a pnpm-deployed package), so the Feishu SDK and
+runtime dependencies resolve without a development source tree.

@@ -9,7 +9,5 @@ export default defineConfig({
   sourcemap: true,
   outDir: 'dist',
   outExtensions: () => ({ js: '.mjs', dts: '.d.mts' }),
-  deps: {
-    alwaysBundle: [/@larksuiteoapi\//],
-  },
+  unbundle: true,
 })
