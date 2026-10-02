@@ -7,6 +7,8 @@
     "node": ">=22.19.0"
   },
   "scripts": {
+    "clean:release": "node scripts/clean-release.mjs",
+    "package:transport": "pnpm run build && node scripts/clean-release.mjs && pnpm --filter @toneclaw/feishu-long-connection deploy --prod release/feishu-long-connection && node scripts/generate-profile.mjs",
     "build": "pnpm --filter @toneclaw/feishu-long-connection run build",
     "test": "pnpm --filter @toneclaw/feishu-long-connection run test",
     "typecheck": "pnpm --filter @toneclaw/feishu-long-connection run typecheck",

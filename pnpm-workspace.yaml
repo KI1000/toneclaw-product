@@ -1,5 +1,8 @@
 packages:
   - packages/*
 
+injectWorkspacePackages: true
+verifyDepsBeforeRun: false
+
 allowBuilds:
   protobufjs: true
