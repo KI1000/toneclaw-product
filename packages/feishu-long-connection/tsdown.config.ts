@@ -1,0 +1,15 @@
+import { defineConfig } from 'tsdown'
+
+export default defineConfig({
+  entry: ['src/index.ts'],
+  format: 'esm',
+  platform: 'node',
+  target: 'node22',
+  dts: false,
+  sourcemap: true,
+  outDir: 'dist',
+  outExtensions: () => ({ js: '.mjs', dts: '.d.mts' }),
+  deps: {
+    alwaysBundle: [/@larksuiteoapi\//],
+  },
+})

@@ -1,0 +1,15 @@
+{
+  "name": "toneclaw-product",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@11.7.0",
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "scripts": {
+    "build": "pnpm --filter @toneclaw/feishu-long-connection run build",
+    "test": "pnpm --filter @toneclaw/feishu-long-connection run test",
+    "typecheck": "pnpm --filter @toneclaw/feishu-long-connection run typecheck",
+    "check": "pnpm run typecheck && pnpm run test && pnpm run build"
+  }
+}

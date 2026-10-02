@@ -1,0 +1,30 @@
+{
+  "name": "@toneclaw/feishu-long-connection",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "ToneClaw Feishu WebSocket ingress for the DeepSeek Harness webhook runtime.",
+  "license": "UNLICENSED",
+  "main": "./dist/index.mjs",
+  "exports": {
+    ".": "./dist/index.mjs"
+  },
+  "files": [
+    "dist/index.mjs"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "check": "pnpm run typecheck && pnpm run test && pnpm run build"
+  },
+  "dependencies": {
+    "@larksuiteoapi/node-sdk": "1.74.0"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.0",
+    "tsdown": "0.22.2",
+    "typescript": "6.0.3",
+    "vitest": "4.1.8"
+  }
+}
