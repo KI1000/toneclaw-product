@@ -1,0 +1,98 @@
+import { cpSync, existsSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { createHash } from 'node:crypto'
+import { dirname, join, relative, resolve } from 'node:path'
+import { fileURLToPath, pathToFileURL } from 'node:url'
+import { execFile } from 'node:child_process'
+import { promisify } from 'node:util'
+
+const execFileAsync = promisify(execFile)
+const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
+const releaseDir = resolve(root, 'release')
+const transportSource = resolve(releaseDir, 'feishu-long-connection')
+const profileSource = resolve(releaseDir, 'profiles/desktop.patch.yml')
+const resourcesDir = resolve(releaseDir, 'desktop-resources')
+const bundleRoot = resolve(resourcesDir, 'toneclaw')
+const pluginDestination = resolve(bundleRoot, 'plugins/feishu-long-connection')
+const profileDestination = resolve(bundleRoot, 'profiles/desktop.patch.yml')
+
+async function productCommit() {
+  const { stdout } = await execFileAsync('git', ['rev-parse', 'HEAD'], { cwd: root })
+  return stdout.trim()
+}
+
+function inventory(rootDirectory) {
+  const files = []
+  for (const entry of readdirSync(rootDirectory, { withFileTypes: true })) {
+    const path = join(rootDirectory, entry.name)
+    if (entry.isDirectory()) files.push(...inventory(path))
+    else if (entry.isFile()) {
+      const body = readFileSync(path)
+      files.push({
+        path: relative(rootDirectory, path).replaceAll('\\', '/'),
+        bytes: body.byteLength,
+        sha256: createHash('sha256').update(body).digest('hex'),
+      })
+    }
+  }
+  return files.sort((left, right) => left.path.localeCompare(right.path))
+}
+
+function assertNoDeveloperPaths(text) {
+  const forbidden = [resolve(root).replaceAll('\\', '/'), 'D:/commerce-space', 'D:\\commerce-space']
+  for (const value of forbidden) {
+    if (text.includes(value)) throw new Error(`generated resources contain developer path: ${value}`)
+  }
+}
+
+if (!existsSync(transportSource)) {
+  throw new Error(`transport release missing: ${transportSource}; run pnpm run package:transport`)
+}
+if (!existsSync(profileSource)) {
+  throw new Error(`generated profile missing: ${profileSource}; run pnpm run package:transport`)
+}
+
+rmSync(resourcesDir, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 })
+cpSync(transportSource, pluginDestination, { recursive: true, dereference: true })
+
+// Regenerate the profile for its final resource-relative location.
+const pluginEntrySource = join(pluginDestination, 'dist/index.mjs')
+const generator = new URL('./generate-profile.mjs', import.meta.url)
+const { spawnSync } = await import('node:child_process')
+const generated = spawnSync(process.execPath, [fileURLToPath(generator),
+  '--plugin', pluginEntrySource,
+  '--out', profileDestination,
+], { stdio: 'inherit', windowsHide: true })
+if (generated.status !== 0) process.exit(generated.status ?? 1)
+
+const patchText = readFileSync(profileDestination, 'utf8')
+assertNoDeveloperPaths(patchText.replaceAll(root.replaceAll('\\', '/'), ''))
+const pluginModule = await import(pathToFileURL(pluginEntrySource).href)
+if (pluginModule.name !== 'feishu-long-connection' || !Array.isArray(pluginModule.inject)) {
+  throw new Error('composed transport plugin does not expose the expected Cordis entry shape')
+}
+
+const engineLock = JSON.parse(readFileSync(resolve(root, 'engine-lock.json'), 'utf8'))
+const packageManifest = JSON.parse(readFileSync(join(transportSource, 'package.json'), 'utf8'))
+const manifest = {
+  schemaVersion: 1,
+  productCommit: await productCommit(),
+  engine: engineLock.engine,
+  packages: [{
+    name: packageManifest.name,
+    version: packageManifest.version,
+    path: 'plugins/feishu-long-connection',
+    entry: 'plugins/feishu-long-connection/dist/index.mjs',
+  }],
+  profiles: [{
+    id: 'desktop',
+    path: 'profiles/desktop.patch.yml',
+  }],
+  files: inventory(bundleRoot),
+}
+writeFileSync(join(resourcesDir, 'toneclaw-manifest.json'), `${JSON.stringify(manifest, undefined, 2)}\n`)
+writeFileSync(resolve(resourcesDir, 'README.txt'), `ToneClaw desktop resource bundle.\nLoad profile: toneclaw/profiles/desktop.patch.yml\nPlugin entry: toneclaw/${manifest.packages[0].entry}\n`)
+
+console.log(`desktop resources: ${resourcesDir}`)
+console.log(`files: ${manifest.files.length}`)
+console.log(`plugin: ${manifest.packages[0].entry}`)
+console.log(`profile: ${manifest.profiles[0].path}`)
