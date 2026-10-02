@@ -11,9 +11,8 @@ const releaseDir = resolve(root, 'release')
 const transportSource = resolve(releaseDir, 'feishu-long-connection')
 const profileSource = resolve(releaseDir, 'profiles/desktop.patch.yml')
 const resourcesDir = resolve(releaseDir, 'desktop-resources')
-const bundleRoot = resolve(resourcesDir, 'toneclaw')
-const pluginDestination = resolve(bundleRoot, 'plugins/feishu-long-connection')
-const profileDestination = resolve(bundleRoot, 'profiles/desktop.patch.yml')
+const pluginDestination = resolve(resourcesDir, 'plugins/feishu-long-connection')
+const profileDestination = resolve(resourcesDir, 'profiles/desktop.patch.yml')
 
 async function productCommit() {
   const { stdout } = await execFileAsync('git', ['rev-parse', 'HEAD'], { cwd: root })
@@ -87,10 +86,10 @@ const manifest = {
     id: 'desktop',
     path: 'profiles/desktop.patch.yml',
   }],
-  files: inventory(bundleRoot),
+  files: inventory(resourcesDir),
 }
 writeFileSync(join(resourcesDir, 'toneclaw-manifest.json'), `${JSON.stringify(manifest, undefined, 2)}\n`)
-writeFileSync(resolve(resourcesDir, 'README.txt'), `ToneClaw desktop resource bundle.\nLoad profile: toneclaw/profiles/desktop.patch.yml\nPlugin entry: toneclaw/${manifest.packages[0].entry}\n`)
+writeFileSync(resolve(resourcesDir, 'README.txt'), `ToneClaw desktop resource bundle.\nLoad profile: ${manifest.profiles[0].path}\nPlugin entry: ${manifest.packages[0].entry}\n`)
 
 console.log(`desktop resources: ${resourcesDir}`)
 console.log(`files: ${manifest.files.length}`)
