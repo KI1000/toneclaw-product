@@ -10,6 +10,8 @@
     "build": "pnpm --filter @toneclaw/feishu-long-connection run build",
     "test": "pnpm --filter @toneclaw/feishu-long-connection run test",
     "typecheck": "pnpm --filter @toneclaw/feishu-long-connection run typecheck",
-    "check": "pnpm run typecheck && pnpm run test && pnpm run build"
+    "check:boundaries": "node scripts/check-package-boundaries.mjs",
+    "check:engine-lock": "node scripts/check-engine-lock.mjs",
+    "check": "pnpm run check:boundaries && pnpm run typecheck && pnpm run test && pnpm run build"
   }
 }

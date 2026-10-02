@@ -1,0 +1,8 @@
+{
+  "engine": {
+    "name": "deepseek-harness",
+    "remote": "https://github.com/KI1000/deepseek-harness.git",
+    "branch": "toneclaw/feishu-channel",
+    "commit": "3b74ba555dde6e3cf8b9cdcde975668a77afa918"
+  }
+}

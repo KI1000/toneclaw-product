@@ -5,6 +5,13 @@
   "type": "module",
   "description": "ToneClaw Feishu WebSocket ingress for the DeepSeek Harness webhook runtime.",
   "license": "UNLICENSED",
+  "toneclaw": {
+    "layer": "product",
+    "kind": "dsh-plugin",
+    "allowedExternalDependencies": [
+      "@larksuiteoapi/node-sdk"
+    ]
+  },
   "main": "./dist/index.mjs",
   "exports": {
     ".": "./dist/index.mjs"
