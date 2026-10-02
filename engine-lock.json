@@ -3,6 +3,6 @@
     "name": "deepseek-harness",
     "remote": "https://github.com/lztone-ai/deepseek-harness.git",
     "branch": "toneclaw/feishu-channel",
-    "commit": "732ba7d6b8afff4ff0c79cdb1643fb5b84b39ec4"
+    "commit": "3eda358ee6f22971ce7b1d879f5f91486ef0acb6"
   }
 }

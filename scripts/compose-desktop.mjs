@@ -19,15 +19,15 @@ async function productCommit() {
   return stdout.trim()
 }
 
-function inventory(rootDirectory) {
+function inventory(rootDirectory, manifestRoot = rootDirectory) {
   const files = []
   for (const entry of readdirSync(rootDirectory, { withFileTypes: true })) {
     const path = join(rootDirectory, entry.name)
-    if (entry.isDirectory()) files.push(...inventory(path))
+    if (entry.isDirectory()) files.push(...inventory(path, manifestRoot))
     else if (entry.isFile()) {
       const body = readFileSync(path)
       files.push({
-        path: relative(rootDirectory, path).replaceAll('\\', '/'),
+        path: relative(manifestRoot, path).replaceAll('\\', '/'),
         bytes: body.byteLength,
         sha256: createHash('sha256').update(body).digest('hex'),
       })
