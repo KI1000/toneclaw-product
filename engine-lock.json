@@ -1,7 +1,7 @@
 {
   "engine": {
     "name": "deepseek-harness",
-    "remote": "https://github.com/KI1000/deepseek-harness.git",
+    "remote": "https://github.com/lztone-ai/deepseek-harness.git",
     "branch": "toneclaw/feishu-channel",
     "commit": "50e1673c463983d49dacfe7a6d91f2a109c126b0"
   }
