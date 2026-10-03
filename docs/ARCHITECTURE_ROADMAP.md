@@ -1,6 +1,6 @@
 # ToneClaw 业务架构与分阶段实施路线图
 
-> 记录时间：2026-10-03 20:36:56 CST
+> 记录时间：2026-10-03 20:44:33 CST  
 > 状态：当前总体架构与实施路线图
 > 上游依据：
 > - `docs/BUSINESS_ARCHITECTURE.md`：业务架构 SSOT
@@ -613,3 +613,116 @@ Phase 7：AI Agent 经营自动化
 10. P0 页面信息架构。
 
 这一步完成前，不建议大规模写业务代码。
+
+## 11. 业界对标与规划映射
+
+### 11.1 业界总体画像
+
+业界成熟系统通常由几类能力组成：
+
+```text
+Master Catalog / PIM
++ Supplier Catalog / 货盘生态
++ Product Research / 选品情报
++ Channel Manager / Platform Adapter
++ AI Content / AI Listing
++ Order / Inventory / Fulfillment / ERP
++ Finance / Settlement / Profit
++ AI Usage Metering
++ AI Agent / Agentic Commerce
+```
+
+ToneClaw 不打算第一版复刻全部能力，而是先把平台无关核心模型和 Temu 单平台闭环跑通，再分阶段吸收业界成熟能力。
+
+### 11.2 业界能力与规划映射
+
+| 业界能力 | ToneClaw 对应对象 / 概念 | 当前规划阶段 | 是否进入 P0 |
+| --- | --- | --- | --- |
+| Master Catalog / PIM | Product、ProductVariant、MediaAsset、ContentDraft | Phase 0 做最小模型；Phase 4 做完整 PIM | 最小版进入 P0 |
+| 货盘 / Supplier Catalog | Supplier、SourcingItem | Phase 0 定义模型；Phase 1 做结构化导入 | 进入 P0 |
+| 供应商生态接入 | DataSource、SupplierCatalogFeed、SourcingItem | Phase 0 预留；后续接 1688 / CJ / Doba / 本土货盘等 | 不做完整生态，只做导入 |
+| 平台无关选品 | SelectionDecision、选品理由、利润空间、风险提示 | Phase 0 定义；Phase 1 人工确认 | 进入 P0 |
+| 市场情报 / 竞品分析 | MarketSignal、CompetitorSignal、DemandSignal | Phase 5 | 不进入 P0 |
+| 平台渠道分发 | Store、PlatformCredential、PlatformFitAssessment、ListingDraft、PublishJob、Listing | Phase 1 先做 Temu；Phase 4 多平台 | Temu 进入 P0 |
+| 类目映射 | PlatformCategoryMapping、CategoryTree | Phase 0 做最小映射；Phase 4 做完整体系 | 最小版进入 P0 |
+| 属性映射 | PlatformAttributeMapping、AttributeSchema | Phase 0 做最小映射；Phase 4 完整建模 | 最小版进入 P0 |
+| 商品图 / AI 内容 | MediaAsset、ImageVariant、ContentDraft、ContentVersion | Phase 1 / M3 | 进入 P0 |
+| AI Listing 优化 | ListingDraft、ContentVersion、UsageRecord | Phase 1 / M3 | 进入 P0 |
+| AI Agent / Agentic Commerce | AgentTask、ToolPolicy、EvaluationRun、AuditLog | Phase 7 | 不进入 P0 |
+| AI 购物代理数据就绪 | 结构化属性、GTIN、Schema、库存新鲜度、价格一致性 | Phase 4 起，不提前追求 | 不进入 P0 |
+| 订单同步 | Order、OrderItem、OrderStatus | Phase 1 基础同步；Phase 6 深化 | 基础版进入 P0 |
+| 履约 / 发货 | Fulfillment、Shipment、FulfillmentStatus | Phase 1 基础可见；Phase 6 深化 | 基础版进入 P0 |
+| 售后 / 退款 | AfterSale、Refund、Dispute | Phase 6 | 不进入 P0 |
+| 库存 / 仓库 / 采购 | Stock、Warehouse、PurchaseOrder | Phase 6 / ERP-lite | 不进入 P0 |
+| 结算 / 回款 | Settlement、PlatformFee、Payout | Phase 1 基础模型；Phase 6 完整对账 | 基础版进入 P0 |
+| 利润核算 | CostProfit、CurrencyRate、FeeRule | Phase 1 基础估算；Phase 6 精细核算 | 基础版进入 P0 |
+| 软件计费 | Subscription、Plan、Entitlement、LicenseStatus | Phase 0 建模；Phase 1 校验；Phase 3 商业化 | 进入 P0 |
+| Token / AI 用量计费 | UsageRecord、Quota、PlanLimit、CostEstimate | Phase 0 建模；Phase 1 记录；Phase 3 完整计费 | 进入 P0 |
+| 审计 / 权限 | AuditLog、Permission、ApprovalTask | Phase 0 | 进入 P0 |
+| 可观测性 / 同步稳定性 | SyncJob、IntegrationEvent、RetryPolicy、ErrorCatalog | Phase 2 | 不作为 P0 主功能 |
+| 多店铺 | Store、StoreGroup | Phase 4 | 不进入 P0 |
+| 多币种 / 税务 | CurrencyRate、TaxRule、CountryRule | Phase 4 / Phase 6 | 不进入 P0 |
+| 完整 ERP / WMS | PurchaseOrder、Warehouse、Shipment、InventoryLedger | Phase 6 | 不进入 P0 |
+
+### 11.3 P0 中的业界能力取舍
+
+P0 只保留支撑第一条闭环的能力：
+
+```text
+Temu 店铺接入
+→ 最小货盘模型
+→ 平台无关选品
+→ Temu 平台适配
+→ 商品图 / Listing
+→ 上架任务
+→ 状态回写
+→ 基础订单 / 履约可见
+→ 软件授权
+→ Token 计量
+```
+
+以下能力明确延后：
+
+```text
+完整 PIM
+供应商生态 API
+市场情报订阅
+竞品数据源
+多平台店铺
+复杂库存 / 采购 / WMS
+完整财务对账
+AI Agent 自动执行
+```
+
+### 11.4 M0 需要预留的业界标准对象
+
+这些对象不需要 P0 完整实现，但 M0 必须在领域模型中预留，否则后续扩展会破坏核心模型：
+
+| 对象 | 预留原因 |
+| --- | --- |
+| DataSource | 后续接入供应商生态和市场数据源 |
+| MarketSignal | 后续支持数据驱动选品 |
+| CompetitorSignal | 后续支持竞品分析 |
+| DemandSignal | 后续支持需求预测和选品评分 |
+| RiskSignal | 后续支持禁售、知识产权、认证、合规风险 |
+| CategoryTree | 统一类目树，避免被单一平台类目绑定 |
+| AttributeSchema | 统一属性模型，避免平台字段污染核心商品 |
+| PlatformCategoryMapping | 平台类目映射 |
+| PlatformAttributeMapping | 平台属性映射 |
+| ComplianceRequirement | 平台合规、资质、禁售规则 |
+| ContentVersion | 内容版本、审核结果和回滚 |
+| SyncJob | 平台同步任务、重试和状态追踪 |
+| IntegrationEvent | 外部系统事件和回调 |
+| RetryPolicy | 平台调用失败后的重试策略 |
+| ErrorCatalog | 平台错误码和用户可理解原因 |
+
+### 11.5 规划原则
+
+业界能力不是照单全收，而是按四类处理：
+
+```text
+P0 必做：支撑第一条闭环
+P0 预留：建模但不完整实现
+后续阶段：有真实业务价值后再做
+明确延后：避免过早复杂化
+```
