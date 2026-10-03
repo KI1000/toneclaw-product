@@ -1,6 +1,6 @@
 # ToneClaw 业务架构与分阶段实施路线图
 
-> 记录时间：2026-10-03 20:44:33 CST  
+> 记录时间：2026-10-03 20:52:23 CST  
 > 状态：当前总体架构与实施路线图
 > 上游依据：
 > - `docs/BUSINESS_ARCHITECTURE.md`：业务架构 SSOT
@@ -725,4 +725,159 @@ P0 必做：支撑第一条闭环
 P0 预留：建模但不完整实现
 后续阶段：有真实业务价值后再做
 明确延后：避免过早复杂化
+```
+
+## 12. 阶段衔接与重构风险控制
+
+### 12.1 总原则
+
+阶段之间应该是扩展关系，不是推倒重来。
+
+```text
+上一阶段交付可运行能力；
+下一阶段复用核心对象和状态机；
+新增能力通过 Adapter、Mapping、Job、Policy 扩展；
+不允许把平台逻辑写进核心域。
+```
+
+### 12.2 阶段门禁
+
+每个阶段结束前必须通过对应门禁，避免小问题积累成 Phase 4 大重构。
+
+| 门禁 | 所属阶段 | 必须通过的条件 |
+| --- | --- | --- |
+| G0 | Phase 0 架构冻结 | 核心对象、状态机、Adapter 契约、权限审计、计费计量模型已冻结 |
+| G1 | Phase 1 最小闭环 | Temu 链路可运行，核心模型没有 Temu 专属字段，AI 动作有 UsageRecord |
+| G2 | Phase 2 真实试点 | 错误码、重试、同步、审计、数据一致性达到可用标准 |
+| G3 | Phase 3 商业化 | 套餐、授权、配额、用量、降级策略闭环 |
+| G4 | Phase 4 多平台扩展 | 核心模型通过跨平台审查，第二平台只通过 Adapter 接入 |
+| G5 | Phase 5 数据驱动选品 | SelectionDecision 保持平台无关，平台差异仍在适配评估层 |
+| G6 | Phase 6 ERP-lite | 库存、采购、履约、结算和利润对象能对齐，不污染跨平台核心 |
+| G7 | Phase 7 AI Agent | 自动任务具备权限、审计、确认、回滚和评估机制 |
+
+### 12.3 Phase 0 调整
+
+原 Phase 0 调整为两个子阶段。
+
+#### Phase 0A：业务模型冻结
+
+冻结以下核心对象：
+
+```text
+Seller / Store
+Supplier / SourcingItem
+SelectionDecision
+Product / ProductVariant
+PlatformFitAssessment
+ListingDraft / PublishJob / Listing
+Order / Fulfillment
+Settlement / CostProfit
+Subscription / UsageRecord
+AuditLog / Insight
+```
+
+#### Phase 0B：工程契约冻结
+
+冻结以下工程契约：
+
+```text
+Platform Adapter Interface
+统一状态映射
+错误码 / ErrorCatalog
+同步任务 / SyncJob
+重试策略 / RetryPolicy
+权限模型
+审计模型
+软件计费模型
+Token 计量模型
+领域事件边界
+```
+
+### 12.4 Phase 1 出口审查
+
+Phase 1 结束时必须做一次“防平台硬编码审查”。
+
+重点检查：
+
+```text
+核心对象是否被 Temu 字段污染；
+Temu API 是否只出现在 Temu Adapter；
+Temu 状态是否已映射为统一状态；
+Temu 错误是否被 ErrorCatalog 转换；
+选品是否被 Temu 绑定；
+AI 生成是否全部产生 UsageRecord；
+高风险写操作是否有确认和审计。
+```
+
+### 12.5 Phase 4 拆分
+
+原 Phase 4 拆成两个子阶段。
+
+#### Phase 4A：商品主数据与平台映射抽象
+
+只做抽象和映射能力，不急着接第二平台。
+
+范围：
+
+```text
+CategoryTree
+AttributeSchema
+PlatformCategoryMapping
+PlatformAttributeMapping
+ComplianceRequirement
+MediaVariant
+ContentVersion
+PlatformCapabilityRegistry
+```
+
+#### Phase 4B：第二平台接入
+
+只有 Phase 4A 通过审查后，才接入第二平台。
+
+候选平台：
+
+```text
+TikTok Shop
+Amazon
+Shopee
+AliExpress
+```
+
+选择标准：
+
+```text
+官方 API 成熟度
+目标用户需求
+资质门槛
+模型复用度
+单人团队维护成本
+```
+
+### 12.6 允许的渐进重构
+
+以下属于健康重构：
+
+```text
+临时 API 调用改为标准 SyncJob；
+散落错误提示集中到 ErrorCatalog；
+硬编码校验改为规则模型；
+局部服务拆成正式模块；
+最小字段扩展为完整 PIM；
+简单权限扩展为多店铺权限。
+```
+
+### 12.7 禁止的危险信号
+
+如果出现以下信号，必须先停止新增功能：
+
+```text
+Product 出现 temu_title；
+SourcingItem 出现 temu_category_id；
+核心服务直接 import Temu SDK；
+每个平台复制一套业务逻辑；
+订单状态直接保存平台原始状态；
+Token 用量后补；
+权限审计后补；
+前端直接解释平台错误码；
+没有统一 PublishJob。
 ```

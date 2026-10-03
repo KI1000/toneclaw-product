@@ -1,6 +1,6 @@
 # ToneClaw 业务架构闭环
 
-> 记录时间：2026-10-03 20:15:20 CST
+> 记录时间：2026-10-03 20:52:14 CST
 > 状态：当前业务架构决策底稿
 > 文档定位：本文件是 ToneClaw 业务架构的仓库内 SSOT。
 > 结论：ToneClaw 先定义统一卖家经营闭环；各跨境平台通过 Adapter 映射到这套闭环，而不是为每个平台各做一套业务系统。
@@ -277,3 +277,108 @@ P0 仍然只接入 Temu 店铺，但货盘对象模型必须具备跨平台复�
 
 如果一个问题只在某个平台成立，应放在平台 Adapter；
 如果它在多个平台成立，应放进 ToneClaw 核心业务模型。
+
+## 11. 架构不变量
+
+以下规则属于业务架构不变量，后续每个阶段都应保持。
+
+### 11.1 跨平台核心不绑定单一平台
+
+以下对象属于 ToneClaw 核心层，不应被 Temu 或某个 Marketplace 定义：
+
+```text
+Supplier
+SourcingItem
+SelectionDecision
+Product
+ProductVariant
+MediaAsset
+CostProfit
+Subscription
+UsageRecord
+AuditLog
+```
+
+### 11.2 平台差异必须进入平台适配层
+
+以下内容只应出现在平台适配层或映射对象中：
+
+```text
+PlatformFitAssessment
+PlatformCategoryMapping
+PlatformAttributeMapping
+PlatformComplianceRule
+ListingDraft
+PublishJob
+Listing
+Order
+Fulfillment
+AfterSale
+Settlement
+```
+
+### 11.3 Product 与 Listing 分离
+
+```text
+Product
+≠ ListingDraft
+≠ PublishJob
+≠ Listing
+```
+
+Product 是 ToneClaw 内的经营商品；ListingDraft、PublishJob、Listing 是平台发布链路中的对象。
+
+### 11.4 平台状态必须映射为统一状态
+
+不能让核心业务直接理解 Temu、TikTok、Amazon 的私有状态。
+
+应采用：
+
+```text
+Platform Raw Status
+→ ToneClaw Platform Status
+→ ToneClaw Core Status
+```
+
+### 11.5 高风险写操作必须可确认、可审计
+
+上架、改价、改库存、创建备货单、发货等动作必须具备：
+
+```text
+前置校验
+→ 人工确认
+→ 执行
+→ 状态回写
+→ 失败原因
+→ AuditLog
+```
+
+### 11.6 AI 动作必须从第一天计量
+
+每个 AI 动作都应生成：
+
+```text
+UsageRecord
+→ Scene
+→ Model
+→ InputTokens
+→ OutputTokens
+→ CostEstimate
+→ AuditLog
+```
+
+### 11.7 阶段出口必须检查架构不变量
+
+每个阶段结束前，应检查是否出现以下信号：
+
+```text
+Product 中出现平台专属字段；
+核心服务直接 import 平台 SDK；
+平台原始状态散落在业务逻辑中；
+AI 生成没有 UsageRecord；
+高风险写操作没有审计；
+选品模型被单一平台绑定；
+UI 直接解释平台错误码。
+```
+
+如果出现，应做有边界的修正，而不是继续堆功能。
