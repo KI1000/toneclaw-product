@@ -1,12 +1,12 @@
 # ToneClaw M0 核心模型
 
-> 记录时间：2026-10-03 21:31:20 CST  
-> 状态：M0 草案  
-> 文档定位：定义 ToneClaw 的核心业务对象、关系、最小字段和 P0 边界。  
-> 上游依据：  
-> - `docs/BUSINESS_ARCHITECTURE.md`  
-> - `docs/PRODUCT_PLAN_REVIEW.md`  
-> - `docs/ARCHITECTURE_ROADMAP.md`  
+> 记录时间：2026-10-03 22:21:27 CST
+> 状态：M0 草案
+> 文档定位：定义 ToneClaw 的核心业务对象、关系、最小字段和 P0 边界。
+> 上游依据：
+> - `docs/BUSINESS_ARCHITECTURE.md`
+> - `docs/PRODUCT_PLAN_REVIEW.md`
+> - `docs/ARCHITECTURE_ROADMAP.md`
 > - `docs/INTEGRATION_MAP.md`
 
 ## 1. M0 目标
@@ -307,7 +307,7 @@ Amazon Seller Account
 | business_mode | enum | 是 | semi_managed / full_managed / local_store |
 | currency | string | 是 | 店铺主要币种 |
 | timezone | string | 是 | 店铺时区 |
-| status | enum | 是 | connected / disconnected / expired / error |
+| status | enum | 是 | connecting / connected / degraded / disconnected / expired / error / archived |
 | connected_at | datetime | 是 | 连接时间 |
 | last_synced_at | datetime | 是 | 最近同步时间 |
 
@@ -412,7 +412,7 @@ P0 可以简化为：
 | credential_type | enum | 是 | oauth / app_key_secret / seller_token |
 | secret_ref | string | 是 | 凭据安全存储引用 |
 | scopes | string[] | 是 | 授权范围 |
-| status | enum | 是 | active / expired / revoked / invalid |
+| status | enum | 是 | pending / active / expired / revoked / invalid |
 | expires_at | datetime | 否 | 到期时间 |
 | last_verified_at | datetime | 是 | 最近验证时间 |
 
@@ -431,8 +431,8 @@ P0 可以简化为：
 | id | UUID | 是 | 能力 ID |
 | store_id | UUID | 是 | 店铺 |
 | capability_key | string | 是 | 能力键，如 listing.create / order.read |
-| status | enum | 是 | available / unavailable / unknown |
-| mode | enum | 是 | api / manual / export_import / unsupported |
+| status | enum | 是 | unknown / checking / available / unavailable / unsupported |
+| mode | enum | 是 | api / manual / export_import |
 | checked_at | datetime | 是 | 检查时间 |
 | notes | string | 否 | 说明 |
 
@@ -536,7 +536,7 @@ local_pool
 | contact_name | string | 否 | 联系人 |
 | contact_channel | string | 否 | 联系方式 |
 | default_currency | string | 是 | 默认币种 |
-| supply_status | enum | 是 | active / paused / blacklisted |
+| status | enum | 是 | draft / active / paused / blocked / archived |
 | rating | number | 否 | 主观评分 |
 | notes | string | 否 | 备注 |
 
@@ -567,7 +567,7 @@ local_pool
 | stock_status | enum | 是 | available / low / out_of_stock / unknown |
 | supply_status | enum | 是 | active / paused / discontinued |
 | risk_status | enum | 是 | unknown / low / medium / high |
-| status | enum | 是 | imported / candidate / selected / rejected / archived |
+| status | enum | 是 | imported / normalizing / candidate / invalid / selected / rejected / archived |
 | attributes | AttributeValue[] | 否 | 平台无关属性 |
 | tag_ids | UUID[] | 否 | 标签 |
 
@@ -590,7 +590,7 @@ local_pool
 | id | UUID | 是 | 决策 ID |
 | business_account_id | UUID | 是 | 所属卖家 |
 | sourcing_item_id | UUID | 是 | 货盘商品 |
-| decision | enum | 是 | candidate / approved / rejected / observing |
+| decision | enum | 是 | approved / rejected / observing |
 | reason | text | 是 | 决策理由 |
 | scores | JSON | 否 | 评分明细 |
 | decided_by | enum | 是 | user / ai / system |
@@ -640,7 +640,7 @@ Product.created_from_selection_id 必须能追溯到决策。
 | source_url | string | 否 | 原始 URL |
 | checksum | string | 是 | 指纹 |
 | rights_status | enum | 是 | unknown / owned / licensed / restricted |
-| status | enum | 是 | active / archived / blocked |
+| status | enum | 是 | imported / processing / ready / failed / blocked / archived |
 
 ### 5.7 SourcingItemQualification
 
@@ -766,6 +766,8 @@ ToneClaw 内的经营商品。
 
 Product 不包含 Temu 字段。
 
+创建 `Product` 时，`risk_status` 默认继承来源 `SourcingItem.risk_status`。后续 `PlatformFitAssessment` 可以更新风险等级，但必须保留审计记录。
+
 ### 7.2 ProductVariant
 
 SKU / 规格。
@@ -830,7 +832,7 @@ SKU / 规格。
 | height | integer | 是 | 高 |
 | mime_type | string | 是 | MIME 类型 |
 | storage_ref | string | 是 | 存储引用 |
-| status | enum | 是 | active / invalid / archived |
+| status | enum | 是 | pending / generating / ready / invalid / archived |
 
 ### 8.3 ContentDraft
 
@@ -849,7 +851,7 @@ AI 或人工生成的内容草稿。
 | generated_by | enum | 是 | ai / human / import |
 | model | string | 否 | 模型 |
 | usage_record_id | UUID | 否 | 用量记录 |
-| status | enum | 是 | draft / approved / rejected / archived |
+| status | enum | 是 | draft / generating / ready / waiting_approval / approved / rejected / superseded / archived |
 | reviewed_by | UUID | 否 | 审核人 |
 | reviewed_at | datetime | 否 | 审核时间 |
 
@@ -874,7 +876,7 @@ AI 或人工生成的内容草稿。
 | price_status | enum | 是 | unknown / passed / warning / failed |
 | risk_score | number | 否 | 风险分 |
 | findings | Finding[] | 否 | 问题列表 |
-| status | enum | 是 | draft / completed / outdated |
+| status | enum | 是 | not_started / running / completed / outdated / canceled |
 | assessed_at | datetime | 是 | 评估时间 |
 
 ### 9.2 Finding
@@ -928,6 +930,8 @@ AI 或人工生成的内容草稿。
 `ListingDraft.status` 只表达草稿准备和审批状态，不表达平台真实状态。
 
 平台真实状态由 `Listing.core_status` 表达；单次发布动作由 `PublishJob.status` 表达。
+
+`ListingDraft` 中的 `title` / `description` / `bullets` / `keywords` 是被采纳后的发布快照；`ListingDraftContentLink` 是候选内容历史。发布前必须把 `is_selected = true` 的内容同步到对应快照字段。
 
 #### 9.3.1 ListingDraftContentLink
 
@@ -995,7 +999,8 @@ Listing 平台变体 / Offer。
 | --- | --- | --- | --- |
 | id | UUID | 是 | 内部 ID |
 | product_id | UUID | 是 | 商品 |
-| listing_draft_id | UUID | 是 | 来源草稿 |
+| listing_draft_id | UUID | 否 | 来源草稿；人工导入 / 降级恢复时可空 |
+| origin | enum | 是 | draft_published / imported / manual_recovery |
 | store_id | UUID | 是 | 店铺 |
 | platform | enum | 是 | temu |
 | external_listing_id | string | 是 | 平台 Listing ID |
@@ -1023,7 +1028,7 @@ Listing 平台变体 / Offer。
 | platform | enum | 是 | temu |
 | external_order_id | string | 是 | 平台订单 ID |
 | order_number | string | 是 | 订单号 |
-| status | enum | 是 | created / paid / waiting_fulfillment / shipped / delivered / canceled / closed |
+| status | enum | 是 | created / paid / waiting_fulfillment / partially_shipped / shipped / delivered / canceled / closed |
 | raw_status | string | 是 | 平台原始状态 |
 | currency | string | 是 | 币种 |
 | subtotal_minor | integer | 是 | 商品小计 |
@@ -1068,7 +1073,7 @@ Listing 平台变体 / Offer。
 | platform | enum | 是 | temu |
 | external_fulfillment_id | string | 否 | 平台履约 ID |
 | fulfillment_type | enum | 是 | seller_shipping / platform_logistics / unknown |
-| status | enum | 是 | pending / stocking / shipped / in_transit / delivered / exception / canceled |
+| status | enum | 是 | pending / stocking / ready_to_ship / shipped / in_transit / delivered / exception / canceled |
 | raw_status | string | 是 | 平台原始状态 |
 | carrier | string | 否 | 承运商 |
 | tracking_number | string | 否 | 运单号 |
@@ -1149,6 +1154,8 @@ P0 可以只读展示，不做自动处理。
 | source_type | enum | 是 | manual / imported / calculated / platform |
 | notes | string | 否 | 备注 |
 
+P0 的 `CostLedgerEntry` 写入来源如下：订单收入、平台费用、佣金和 AI 使用成本可以由系统按规则生成；采购成本和物流成本允许手工录入或从导入数据生成。所有来源都必须写 `source_type`，禁止没有来源的成本流水。
+
 ### 11.2 ProfitSummary
 
 利润摘要。
@@ -1202,7 +1209,7 @@ P0 可以只读展示，不做自动处理。
 | id | UUID | 是 | 订阅 ID |
 | business_account_id | UUID | 是 | 卖家 |
 | plan_id | UUID | 是 | 套餐 |
-| status | enum | 是 | trial / active / expired / canceled / suspended |
+| status | enum | 是 | trial / active / past_due / expired / canceled / suspended |
 | starts_at | datetime | 是 | 开始时间 |
 | ends_at | datetime | 是 | 结束时间 |
 | auto_renew | boolean | 是 | 是否自动续费 |
@@ -1243,7 +1250,7 @@ AI / Token 用量。
 | currency | string | 是 | 币种 |
 | related_type | enum | 否 | 关联对象类型 |
 | related_id | UUID | 否 | 关联对象 |
-| status | enum | 是 | succeeded / failed / refunded |
+| status | enum | 是 | recorded / succeeded / failed / refunded |
 | occurred_at | datetime | 是 | 发生时间 |
 
 ## 13. 审计与审批
@@ -1303,7 +1310,7 @@ AI / Token 用量。
 | platform | enum | 否 | temu |
 | object_type | enum | 是 | store / platform_category / platform_attribute / store_capability / listing / order / fulfillment / after_sale / settlement |
 | job_type | enum | 是 | pull / push / verify |
-| status | enum | 是 | queued / running / succeeded / failed / canceled |
+| status | enum | 是 | queued / running / succeeded / failed / needs_manual_action / canceled |
 | attempt_count | integer | 是 | 尝试次数 |
 | max_attempt_count | integer | 是 | 最大尝试 |
 | next_run_at | datetime | 否 | 下次运行 |
@@ -1348,7 +1355,7 @@ AI / Token 用量。
 | summary | text | 是 | 摘要 |
 | metrics | JSON | 否 | 指标 |
 | generated_by | enum | 是 | system / ai / human |
-| status | enum | 是 | draft / published / dismissed |
+| status | enum | 是 | draft / generating / published / dismissed / archived |
 
 ## 16. P0 对象范围
 
@@ -1358,6 +1365,8 @@ AI / Token 用量。
 BusinessAccount
 User
 Store
+ExternalSellerAccount
+PlatformConnection
 PlatformCredential
 DataSource
 Supplier
@@ -1423,6 +1432,7 @@ CompetitorSignal
 DemandSignal
 RiskSignal
 AgentTask
+SupplyOrder
 ```
 
 ## 17. 审核结论
