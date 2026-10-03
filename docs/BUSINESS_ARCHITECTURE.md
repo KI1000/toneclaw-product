@@ -1,6 +1,6 @@
 # ToneClaw 业务架构闭环
 
-> 记录时间：2026-10-03 20:13:19 CST
+> 记录时间：2026-10-03 20:15:20 CST
 > 状态：当前业务架构决策底稿
 > 文档定位：本文件是 ToneClaw 业务架构的仓库内 SSOT。
 > 结论：ToneClaw 先定义统一卖家经营闭环；各跨境平台通过 Adapter 映射到这套闭环，而不是为每个平台各做一套业务系统。
@@ -81,6 +81,8 @@ ToneClaw 的核心业务闭环是：
 | Product | 从货盘 / 选品结果转化出的卖家经营商品 |
 | Supplier | 供应商、货源资质、起订量、供货能力 |
 | SourcingItem | 平台无关的统一货盘商品 / 供应商 / 选品候选 |
+| SelectionDecision | 平台无关的选品判断：候选、通过、拒绝、观察 |
+| PlatformFitAssessment | 某个平台对商品的适配评估：类目、合规、价格带、履约、竞争度 |
 | Listing | 平台侧商品链接、标题、图、类目、价格、库存 |
 | Order | 订单、备货单、发货单、履约状态 |
 | Fulfillment | 发货、物流、时效、异常 |
@@ -92,6 +94,8 @@ ToneClaw 的核心业务闭环是：
 平台数据可以有差异，但进入 ToneClaw 后必须归一到这些业务对象上。
 
 统一货盘是平台无关能力，面向所有平台店铺卖家。`SourcingItem` 不归属于单一 Marketplace；Temu、TikTok Shop、Amazon、Shopee、AliExpress 或独立站后续都可以复用同一货盘。Temu 只是第一个消费方。
+
+选品同样是平台无关核心能力。`SelectionDecision` 判断一个货盘商品是否值得进入卖家经营商品池，不归属于 Temu。平台差异放在 `PlatformFitAssessment` 中，例如 Temu 类目、资质、禁售规则、价格带、履约方式和竞争度。P0 只实现 Temu 平台适配评估，但选品核心模型必须支持后续平台复用。
 
 ## 5. 系统分层
 
