@@ -1,6 +1,6 @@
 # ToneClaw M0 核心模型
 
-> 记录时间：2026-10-03 22:21:27 CST
+> 记录时间：2026-10-03 22:35:10 CST
 > 状态：M0 草案
 > 文档定位：定义 ToneClaw 的核心业务对象、关系、最小字段和 P0 边界。
 > 上游依据：
@@ -372,7 +372,7 @@ ToneClaw 与外部平台卖家账号之间的授权连接。
 | external_seller_account_id | string | 是 | 平台卖家账号 ID |
 | connection_type | enum | 是 | oauth / app_key_secret / seller_token |
 | display_name | string | 否 | 连接名称 |
-| status | enum | 是 | active / expired / revoked / invalid / error |
+| status | enum | 是 | pending / active / expired / revoked / invalid / error / disconnected |
 | scopes | string[] | 是 | 授权范围 |
 | connected_by_user_id | UUID | 是 | 发起连接的用户 |
 | connected_at | datetime | 是 | 连接时间 |
@@ -393,6 +393,16 @@ P0 可以简化为：
 ```text
 1 个 PlatformConnection
 → N 个 Store
+```
+
+P0 约束：
+
+```text
+一个 BusinessAccount 只能有一个 active PlatformConnection；
+Store 只有在父级 PlatformConnection = active 时才能 connected；
+pending / expired / revoked / invalid / disconnected 的 PlatformConnection 不能发起新的平台写操作；
+PlatformCredential 必须归属 PlatformConnection，不能跨 Connection 复用；
+StoreCapability 必须按 PlatformConnection + Store 重新检查。
 ```
 
 ### 4.7 PlatformCredential
@@ -603,7 +613,7 @@ local_pool
 ```text
 一个 SourcingItem 可以有多次 SelectionDecision；
 当前有效决策只有 status = active 的记录；
-Product.created_from_selection_id 必须能追溯到决策。
+Product.created_from_selection_id 必须能追溯到决策。如果 `SelectionDecision.result_product_id` 非空，它必须等于由该决策创建的 `Product.id`。
 ```
 
 ### 5.5 SourceRecord
@@ -813,7 +823,7 @@ SKU / 规格。
 | width | integer | 否 | 宽 |
 | height | integer | 否 | 高 |
 | rights_status | enum | 是 | unknown / owned / licensed / restricted |
-| status | enum | 是 | active / archived / blocked |
+| status | enum | 是 | imported / processing / ready / failed / blocked / archived |
 
 ### 8.2 MediaVariant
 
@@ -966,7 +976,7 @@ Listing 平台变体 / Offer。
 | price_minor | integer | 是 | 变体售价 |
 | currency | string | 是 | 币种 |
 | stock_qty | integer | 是 | 变体库存 |
-| status | enum | 是 | draft / validated / approved / submitted / live / rejected / inactive |
+| status | enum | 是 | draft / validated / approved / submitted / live / rejected / inactive / archived |
 
 ### 9.4 PublishJob
 
@@ -1005,7 +1015,7 @@ Listing 平台变体 / Offer。
 | platform | enum | 是 | temu |
 | external_listing_id | string | 是 | 平台 Listing ID |
 | url | string | 否 | 平台链接 |
-| core_status | enum | 是 | draft / submitted / platform_review / live / rejected / inactive |
+| core_status | enum | 是 | submitted / platform_review / live / rejected / inactive / archived |
 | raw_status | string | 是 | 平台原始状态 |
 | price_minor | integer | 是 | 当前售价 |
 | currency | string | 是 | 币种 |
@@ -1399,6 +1409,22 @@ SyncJob
 ErrorCatalogEntry
 StoreCapability
 ```
+
+### P0 主链路薄实现边界
+
+P0 虽然保留以下对象，但必须按薄实现交付，不建完整 PIM 或平台能力全量库：
+
+| 对象 / 能力 | P0 薄实现 |
+| --- | --- |
+| Category / CategoryTree | 只维护 Temu 所需类目候选，不做全平台类目树 |
+| AttributeDefinition / AttributeSchema | 只定义 Temu 上架必需属性，不做通用属性引擎 |
+| PlatformCategoryMapping | 只覆盖 P0 货盘到 Temu 的常用映射 |
+| PlatformAttributeMapping | 只覆盖 Temu 上架必需字段 |
+| MediaVariant | 只生成 Temu 必需图片规格，不做全平台尺寸矩阵 |
+| ErrorCatalogEntry | 只覆盖 P0 授权、类目、校验、限流、服务器错误 |
+| SyncJob | 只支持 P0 所需 pull / push / verify，不做过期任务治理 |
+| Insight | 只做上架漏斗、异常和用量摘要，不做智能经营分析 |
+| SourceRecord | 只保留文件级来源，不做完整版本历史 |
 
 ### P0 只读或最小实现
 

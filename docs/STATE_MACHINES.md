@@ -1,6 +1,6 @@
 # ToneClaw M0 状态机
 
-> 记录时间：2026-10-03 22:21:27 CST
+> 记录时间：2026-10-03 22:35:10 CST
 > 状态：M0 草案
 > 文档定位：定义主链路对象的状态机、状态职责、关键事件和 P0 边界。
 > 上游依据：`docs/CORE_MODEL.md`
@@ -697,6 +697,25 @@ archived
 | live | platform.pause | inactive | 下架 / 停售 |
 | inactive | platform.resume | live | 重新上架 |
 | rejected / inactive | listing.archive | archived | 终态 |
+
+人工降级入口：
+
+| From | Event | To | Guard / Effect |
+| --- | --- | --- | --- |
+| none | listing.import.live | live | origin = imported / manual_recovery；Guard：平台确认 Listing 存在且在售 |
+| none | listing.import.review | platform_review | origin = imported / manual_recovery；Guard：平台确认 Listing 正在审核 |
+| none | listing.import.rejected | rejected | origin = imported / manual_recovery；Guard：平台确认 Listing 被驳回 |
+| none | listing.import.inactive | inactive | origin = imported / manual_recovery；Guard：平台确认 Listing 存在但已停售 |
+
+人工降级必须记录：
+
+```text
+external_listing_id
+platform_raw_status
+imported_by
+import_source_ref
+AuditLog
+```
 
 状态映射：
 
