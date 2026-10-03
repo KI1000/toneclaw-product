@@ -77,7 +77,7 @@ Settings
 
 ## 3. Dashboard
 
-### 目的
+### Dashboard — 目的
 
 让卖家快速看到经营健康度和待办事项。
 
@@ -92,7 +92,7 @@ Settings
 | 异常提醒 | Fulfillment、SyncJob | 显示履约异常和同步失败 |
 | AI 用量摘要 | UsageRecord | 显示本期用量和剩余额度 |
 
-### 关键操作
+### Dashboard — 关键操作
 
 ```text
 连接 Temu 店铺；
@@ -103,7 +103,7 @@ Settings
 查看最近订单。
 ```
 
-### 状态展示
+### Dashboard — 状态展示
 
 | 状态 | UI 表达 |
 | --- | --- |
@@ -117,7 +117,7 @@ Settings
 
 ## 4. Store
 
-### 目的
+### Store — 目的
 
 管理 Temu 店铺连接和平台能力。
 
@@ -132,7 +132,7 @@ Settings
 | 同步状态 | last_synced_at、SyncJob 最近任务 |
 | 风险提示 | 授权过期、能力缺失、同步失败 |
 
-### 关键操作
+### Store — 关键操作
 
 ```text
 连接 Temu；
@@ -168,11 +168,11 @@ API 可用；
 
 ## 5. Sourcing
 
-### 目的
+### Sourcing — 目的
 
 管理货盘来源和候选商品。
 
-### 页面结构
+### Sourcing — 页面结构
 
 #### 5.1 Sourcing Pool
 
@@ -195,7 +195,7 @@ API 可用；
 | 来源 | DataSource、SourceRecord |
 | 选品历史 | SelectionDecision 列表 |
 
-### 关键操作
+### Sourcing / Sourcing Item Detail — 关键操作
 
 ```text
 导入 Excel / CSV / JSON；
@@ -208,7 +208,7 @@ API 可用；
 归档。
 ```
 
-### 状态展示
+### Sourcing / Sourcing Item Detail — 状态展示
 
 | SourcingItem.status | UI 文案 |
 | --- | --- |
@@ -222,11 +222,11 @@ API 可用；
 
 ## 6. Selection
 
-### 目的
+### Selection — 目的
 
 判断货盘商品是否进入经营商品池。
 
-### 页面结构
+### Selection — 页面结构
 
 #### 6.1 Selection Queue
 
@@ -247,7 +247,7 @@ API 可用；
 | 决策表单 | decision、reason、scores |
 | 历史决策 | SelectionDecision 历史 |
 
-### 关键操作
+### Selection / Selection Detail — 关键操作
 
 ```text
 通过选品；
@@ -258,7 +258,7 @@ API 可用；
 重新评估。
 ```
 
-### 状态展示
+### Selection / Selection Detail — 状态展示
 
 | SelectionDecision.decision | UI 文案 |
 | --- | --- |
@@ -268,11 +268,11 @@ API 可用；
 
 ## 7. Products
 
-### 目的
+### Products — 目的
 
 管理 ToneClaw 商品主数据。
 
-### 页面结构
+### Products — 页面结构
 
 #### 7.1 Product List
 
@@ -295,7 +295,7 @@ API 可用；
 | 平台适配 | PlatformFitAssessment |
 | 来源追溯 | SourcingItem、SelectionDecision |
 
-### 关键操作
+### Products / Product Detail — 关键操作
 
 ```text
 创建商品；
@@ -309,7 +309,7 @@ API 可用；
 暂停 / 归档商品。
 ```
 
-### 状态展示
+### Products / Product Detail — 状态展示
 
 | Product.status | UI 文案 |
 | --- | --- |
@@ -320,11 +320,11 @@ API 可用；
 
 ## 8. Images
 
-### 目的
+### Images — 目的
 
 管理商品图片和平台图片变体。
 
-### 页面结构
+### Images — 页面结构
 
 | 区块 | 数据 |
 | --- | --- |
@@ -333,7 +333,7 @@ API 可用；
 | 平台变体 | MediaVariant 列表 |
 | 生成任务 | 图片生成状态和 UsageRecord |
 
-### 关键操作
+### Images — 关键操作
 
 ```text
 上传图片；
@@ -346,7 +346,7 @@ AI 生成场景图；
 禁用侵权风险图片。
 ```
 
-### 状态展示
+### Images — 状态展示
 
 | MediaAsset.status | UI 文案 |
 | --- | --- |
@@ -359,11 +359,11 @@ AI 生成场景图；
 
 ## 9. Listings
 
-### 目的
+### Listings — 目的
 
 管理 Temu Listing 草稿和平台商品状态。
 
-### 页面结构
+### Listings — 页面结构
 
 #### 9.1 Listing List
 
@@ -405,7 +405,7 @@ AI 生成场景图；
 | 当前库存 | stock_qty |
 | 最近同步 | last_synced_at |
 
-### 关键操作
+### Listings / Listing Platform Detail — 关键操作
 
 ```text
 创建 Listing 草稿；
@@ -421,7 +421,7 @@ AI 生成场景图；
 归档草稿。
 ```
 
-### 状态展示
+### Listings / Listing Platform Detail — 状态展示
 
 | ListingDraft.status | UI 文案 |
 | --- | --- |
@@ -444,11 +444,11 @@ AI 生成场景图；
 
 ## 10. Publish Jobs
 
-### 目的
+### Publish Jobs — 目的
 
 追踪平台上架任务和人工降级任务。
 
-### 页面结构
+### Publish Jobs — 页面结构
 
 | 区块 | 数据 |
 | --- | --- |
@@ -458,7 +458,7 @@ AI 生成场景图；
 | 人工任务 | 导出包状态、导入结果 |
 | 审计 | AuditLog |
 
-### 关键操作
+### Publish Jobs — 关键操作
 
 ```text
 重试失败任务；
@@ -469,7 +469,7 @@ AI 生成场景图；
 查看审计记录。
 ```
 
-### 状态展示
+### Publish Jobs — 状态展示
 
 | PublishJob.status | UI 文案 |
 | --- | --- |
@@ -482,11 +482,11 @@ AI 生成场景图；
 
 ## 11. Orders
 
-### 目的
+### Orders — 目的
 
 让卖家查看 Temu 订单基础状态。
 
-### 页面结构
+### Orders — 页面结构
 
 | 区块 | 数据 |
 | --- | --- |
@@ -495,7 +495,7 @@ AI 生成场景图；
 | 订单明细 | OrderItem |
 | 同步状态 | last_synced_at、SyncJob |
 
-### 关键操作
+### Orders — 关键操作
 
 ```text
 查看订单；
@@ -504,7 +504,7 @@ AI 生成场景图；
 跳转履约。
 ```
 
-### 状态展示
+### Orders — 状态展示
 
 | Order.status | UI 文案 |
 | --- | --- |
@@ -519,11 +519,11 @@ AI 生成场景图；
 
 ## 12. Fulfillments
 
-### 目的
+### Fulfillments — 目的
 
 查看履约 / 发货状态和异常。
 
-### 页面结构
+### Fulfillments — 页面结构
 
 | 区块 | 数据 |
 | --- | --- |
@@ -532,7 +532,7 @@ AI 生成场景图；
 | 关联订单 | Order |
 | 同步状态 | last_synced_at、SyncJob |
 
-### 关键操作
+### Fulfillments — 关键操作
 
 ```text
 查看履约；
@@ -545,11 +545,11 @@ P0 不做自动发货。
 
 ## 13. Usage
 
-### 目的
+### Usage — 目的
 
 展示 AI / Token 用量和剩余额度。
 
-### 页面结构
+### Usage — 页面结构
 
 | 区块 | 数据 |
 | --- | --- |
@@ -559,7 +559,7 @@ P0 不做自动发货。
 | 成本估算 | cost_estimate_minor |
 | 异常记录 | failed UsageRecord |
 
-### 关键操作
+### Usage — 关键操作
 
 ```text
 按场景筛选；
@@ -570,11 +570,11 @@ P0 不做自动发货。
 
 ## 14. Billing
 
-### 目的
+### Billing — 目的
 
 管理订阅、套餐和功能权益。
 
-### 页面结构
+### Billing — 页面结构
 
 | 区块 | 数据 |
 | --- | --- |
@@ -584,7 +584,7 @@ P0 不做自动发货。
 | 额度 | Token、商品数、店铺数 |
 | 变更记录 | 订阅变更历史 |
 
-### 关键操作
+### Billing — 关键操作
 
 ```text
 查看当前套餐；
@@ -598,11 +598,11 @@ P0 不要求完整支付后台。
 
 ## 15. Settings
 
-### 目的
+### Settings — 目的
 
 管理账号、偏好、安全和系统配置。
 
-### 页面结构
+### Settings — 页面结构
 
 | 区块 | 数据 |
 | --- | --- |
@@ -614,7 +614,7 @@ P0 不要求完整支付后台。
 | 通知偏好 | 飞书通知开关 |
 | 审计 | AuditLog 入口 |
 
-### 关键操作
+### Settings — 关键操作
 
 ```text
 编辑经营主体名称；
